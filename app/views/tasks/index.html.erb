@@ -1,0 +1,25 @@
+<% if @task %>
+  <% @page_title = "Task ##{@task.task_num}: #{@task.name} - #{$CONFIG[:productName]}" %>
+<% else %>
+  <% @page_title = "Tasks - #{$CONFIG[:productName]}" %>
+<% end %>
+
+<%= render(:partial => "task_filters/search_filter", :locals => { :redirect_params => { :tag => params[:tag] }}) %>
+<%= render(:partial => "task_filters/panel") %>
+
+<ul class="nav nav-tabs">
+  <li class="active"><a href="/tasks"><i class="icon-list"></i> List</a></li>
+  <li><a href="/tasks/calendar"><i class="icon-calendar"></i> Calendar</a></li>
+</ul>
+
+<div id="groupby" style="display:none">
+  <%= select_tag("chngroup", options_for_changegroup, :onChange => "change_group()") %>
+</div>
+
+<%= yield(:task_list) %>
+
+<div id="task">
+  <%= render_last_task.html_safe if @task %>
+</div>
+
+<%= render :partial => "/tags/panel" %>

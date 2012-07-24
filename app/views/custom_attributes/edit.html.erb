@@ -1,0 +1,20 @@
+<% @page_title = "Custom Attributes - #{$CONFIG[:productName]}" %>
+
+<legend>
+  <%= _("Custom Properties for %s", params[:type].tableize.gsub("_", " ").pluralize) %>
+</legend>
+
+<%= form_tag({:action => "update"}, :class => "form-horizontal") do %>
+  <%= hidden_field_tag(:type, params[:type]) %>
+
+  <fieldset>
+    <ul id="attributes">
+	<%= render(:partial => "attribute", :collection => @attributes) %>
+    </ul>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Update</button>
+      <%= link_to_add_attribute %>
+    </div>
+  </fieldset>
+<% end %>

@@ -1,0 +1,213 @@
+<fieldset>
+  <%= hidden_field 'user', 'working_hours' %>
+  <legend>
+    <% if @user.new_record? %>
+      New user
+    <% else %>
+      <%= @user.name %>
+      <%= link_to_tasks_filtered_by(_("View Tasks"), @user, :class => "btn btn-success pull-right") %>
+    <% end %>
+  </legend>
+
+  <div class="control-group">
+    <label for="user_name"><%=_ 'Name' %></label>
+    <div class="controls">
+      <%= text_field 'user', 'name'  %>
+    </div>
+  </div>
+
+
+  <div class="control-group">
+    <label for="user_username"><%=_ 'Username' %></label>
+    <div class="controls">
+      <%= text_field 'user', 'username', :autocomplete => "off" %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_password"><%=_ 'Password' %></label>
+    <div class="controls">
+      <%= password_field 'user', 'password', :autocomplete => "off"  %>
+    </div>
+  </div>
+
+  <span id="user_email_addresses">
+    <% @user.email_addresses.each_with_index do |e, idx| -%>
+      <%= fields_for(e.new_record? ? 'new_emails' : 'emails', e) do |f| %>
+        <div class="control-group">
+          <label for="user_email"><%=_ 'Email' if idx == 0 %></label>
+          <div class="controls">
+            <%= f.text_field 'email', :index => e.id  %>
+            <% if idx == 0 %>
+              <span class="label label-info" id="default_email">Default</span>
+            <% else %>
+              <span class="email_link_actions">
+                <%= link_to 'Mark As Default', '#', :class => 'mark_as_default' %>
+                <%= link_to '<i class="icon-trash"></i>'.html_safe, '#', :class => 'remove_email', :rel => "tooltip", :title => "remove email", "data-placement" => "right" %>
+              </span>
+            <% end %>
+          </div>
+          <%= f.hidden_field :default, :index => e.id %>
+        </div>
+      <% end %>
+    <% end -%>
+
+    <% if @user.email_addresses.size == 0 -%>
+      <div class="control-group">
+        <label for="user_email"><%=_ 'Email' %></label>
+        <div class="controls">
+          <%= text_field_tag('new_emails[][email]','', :size => 30) %>
+          <span class="label label-info" id="default_email">Default</span>
+        </div>
+        <%= hidden_field_tag 'new_emails[][default]', 1 %>
+      </div>
+    <% end -%>
+  </span>
+
+  <div class="control-group">
+    <div class="controls">
+      <%= link_to "Add Email", "#", :id => "add_email_link" %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_customer_id"><%=_ "Company" %></label>
+    <div class="controls">
+      <%= hidden_field_tag("user[customer_id]", @user.customer_id, :id => "user_customer_id", :class => "auto_complete_id") %>
+      <%= text_field :customer, :name, {:id=>"user_customer_name", :value => @user.customer.name} %>
+      <a href="<%= @user.customer.nil? ? "#" : "/customers/edit/#{@user.customer.id}" %>" id="user_customer_link"><i class="icon-share" title="Go to this company"></i></a>
+    </div>
+  </div>
+
+    <% if @user.autologin && !@user.autologin.empty? %>
+      <div class="control-group">
+        <label><%=_ 'Widget Key' %></label>
+        <div class="controls">
+          <span style="float:left;margin-top:3px;"><%= @user.autologin %></span>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render(:partial => "/common/custom_attributes", :locals => { :object => @user }) %>
+</fieldset>
+
+<fieldset>
+  <legend><%=_ 'Options' %></legend>
+  <div class="control-group">
+    <label for="user_locale"><%=_ 'Language' %></label>
+    <div class="controls">
+      <%= select 'user', 'locale', Localization.locales %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_time_zone"><%=_ 'Location' %></label>
+    <div class="controls">
+      <%= time_zone_select 'user', 'time_zone', TZInfo::Timezone.all.sort, :model => TZInfo::Timezone %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_receive_notifications"><%=_ 'Receive Notifications' %></label>
+    <div class="controls">
+      <%= check_box 'user', 'receive_notifications' %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_receive_own_notifications"><%=_ 'Receive Own Notifications' %></label>
+    <div class="controls">
+      <%= check_box 'user', 'receive_own_notifications' %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_auto_add"><%= _("Automatically add this user to tasks for %s", @user.customer.name) %></label>
+    <div class="controls">
+      <%= check_box "user", "auto_add_to_customer_tasks" %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_active"><%= ("Active") %></label>
+    <div class="controls">
+      <%= check_box(:user, :active) %>
+    </div>
+  </div>
+
+</fieldset>
+
+<% if current_user.admin? %>
+  <fieldset>
+    <legend><%=_ 'Access control' %></legend>
+
+  <div class="control-group">
+    <label for="user_admin"><%=_ 'Administrator' %></label>
+    <div class="controls">
+      <%= check_box 'user', 'admin' %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_use_triggers"><%= _('Administer triggers') %></label>
+    <div class="controls">
+      <%= check_box(:user, :use_triggers) %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_create_projects"><%=_ 'Can Create Projects' %></label>
+    <div class="controls">
+      <%= check_box 'user', 'create_projects' %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_read_clients"><%=_ "Read client details" %></label>
+    <div class="controls">
+      <%= check_box(:user, :read_clients) %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_create_clients"><%=_ "Create clients" %></label>
+    <div class="controls">
+      <%= check_box(:user, :create_clients) %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_edit_clients"><%=_ "Edit client details" %></label>
+    <div class="controls">
+      <%= check_box(:user, :edit_clients) %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_can_approve_work_logs"><%=_ "Approve work logs" %></label>
+    <div class="controls">
+      <%= check_box(:user, :can_approve_work_logs) %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="user_use_resources"><%=_ "Access Resources" %></label>
+    <div class="controls">
+      <%= check_box 'user', 'use_resources' %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <%=label(:user, :access_level_id, _('Comment access level')) %>
+    <div class="controls">
+      <%=select :user, :access_level_id, AccessLevel.all.collect{|al| [al.name, al.id]}%>
+    </div>
+  </div>
+  </fieldset>
+<% end %>
+
+<script type="text/javascript">
+  jQuery(function() {
+    new jobsworth.UserEdit()
+  })
+</script>

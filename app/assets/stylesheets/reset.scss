@@ -1,0 +1,37 @@
+@import "variables";
+
+body {
+  margin: 0;
+}
+
+small {
+  color: gray;
+}
+
+dt {
+  font-size: 11px;
+  color: #999999;
+  display: inline;
+  clear: both;
+  float: left;
+  width: 100px;
+}
+
+dd {
+  display: inline;
+  float: left;
+}
+
+img {
+  vertical-align: middle;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  border: 0;
+}
+
+pre {
+  padding: 1em;
+  font-size: 11px;
+}
+

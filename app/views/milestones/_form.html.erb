@@ -1,0 +1,24 @@
+<div class="control-group">
+  <label for="milestone_name"><%=_ 'Name' %></label>
+  <div class="controls">
+    <%= text_field 'milestone', 'name'  %>
+  </div>
+</div>
+
+<script type="text/javascript">jQuery("#milestone_due_at").datepicker({dateFormat: '<%= current_user.dateFormat %>'});</script>
+<div class="control-group">
+  <label for="milestone_due_at"><%=_ 'Due Date' %></label>
+  <div class="controls">
+    <%= text_field 'milestone', 'due_at', :class=>:datefield, :value=> (@milestone.due_date.nil? ? "" : @milestone.due_date.utc.strftime("#{current_user.date_format}"))  %>
+  </div>
+</div>
+
+<div class="control-group">
+<label for="milestone_description"><%=_ 'Description' %></label>
+  <div class="controls">
+    <%= text_area 'milestone', 'description', :rows => 10, :class => "input-xxlarge"  %>
+  </div>
+</div>
+
+<%= hidden_field_tag "milestone[project_id]", @milestone.project_id %>
+

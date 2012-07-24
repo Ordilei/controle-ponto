@@ -1,0 +1,99 @@
+var jobsworth = jobsworth || {};
+
+jobsworth.UnifiedSearch = (function() {
+
+  var $ = jQuery;
+
+  function UnifiedSearch(container, url, minLength) {
+    this.container = container
+    this.input = $("input", container);
+    this.url = url;
+    this.helperClass = "type_helper" + new Date().valueOf();
+    this.helperSelector = "." + this.helperClass;
+    this.spinnerClass = this.helperClass + "_spinner";
+    this.spinnerSelector = "img." + this.helperClass + "_spinner";
+    this.minLength = (minLength || 1);
+
+    this.bindEvents();
+  }
+
+  UnifiedSearch.prototype.bindEvents = function() {
+    var self = this;
+    this.input.keyup(function(e) {
+      if (self.input.val() == self.last_value) return;
+      self.last_value = self.input.val();
+
+      // if input is task num
+      if (parseInt(self.input.val()) > 0) {
+        self.show({ term: self.input.val()});
+      } else if (self.input.val().length < self.minLength) {
+        $(self.spinnerSelector).remove();
+        $(self.helperSelector).remove();
+        return;
+      } else {
+        self.show({ term: self.input.val()});
+      }
+    }).focusin(function() {
+      if ($(self.helperSelector).length > 0) return;
+
+      self.input.animate({width:"250px"}, 500, function() {
+        if (self.input.val().length < self.minLength) return;
+        self.show({ term: self.input.val() });
+      });
+    }).blur(function() {
+      // if the dropdown is clicked
+      if ($(self.helperSelector).length > 0) return;
+      self.input.animate({width:"150px"}, 500);
+    })
+
+    $("body").click(function(e){
+      if (e.target == self.input[0]) return;
+      if ( $(self.helperSelector).has(e.target).length > 0 || $(self.helperSelector)[0] == e.target) return;
+      $(self.helperSelector).remove();
+      self.input.animate({width:"150px"}, 500);
+    });
+  }
+
+  // data must have a term field
+  UnifiedSearch.prototype.show = function(data) {
+    var self = this;
+
+    // show spinner
+    if ($(self.spinnerSelector).length == 0) {
+      var spinner = $("<img src=\"<%= image_path("spinner.gif") %>\" class=\"" + this.spinnerClass + "\">");
+      spinner.css("position", "absolute")
+             .css("right", "0")
+             .css("top", 5 + "px")
+             .appendTo(self.container);
+    }
+
+    $.get(this.url, data, function(res) {
+      if (! res.success) return;
+      if (self.input.val() != data.term) return;
+
+      $(self.helperSelector).remove();
+
+      // hide spinner
+      $(self.spinnerSelector).remove();
+
+      // show helper
+      var helper = $(res.html);
+      var height = self.input.outerHeight();
+      helper.addClass(self.helperClass);
+      helper.css("position", "absolute");
+      helper.css("left", "0");
+      helper.css("top", 5 + height + "px");
+      helper.css("display", "block");
+      self.container.append(helper);
+
+      $("a.search-trigger", helper).click(function() {
+        params = $(this).data();
+        params.term = data.term;
+        self.show(params);
+        return false;
+      })
+    })
+  }
+
+  return UnifiedSearch;
+})()

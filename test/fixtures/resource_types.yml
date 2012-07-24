@@ -1,0 +1,30 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  company_id: 1
+  name: MyString
+
+two:
+  company_id: 1
+  name: MyString
+
+
+
+
+
+
+# == Schema Information
+#
+# Table name: resource_types
+#
+#  id         :integer(4)      not null, primary key
+#  company_id :integer(4)
+#  name       :string(255)
+#  created_at :datetime
+#  updated_at :datetime
+#
+# Indexes
+#
+#  fk_resource_types_company_id  (company_id)
+#
+

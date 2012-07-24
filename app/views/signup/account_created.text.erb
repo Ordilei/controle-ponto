@@ -1,0 +1,16 @@
+Welcome to <%= $CONFIG[:productName] %>
+
+<%= @created_by.name %> has created an account for you in our task and project management system.
+
+Log in at http://<%= @created_by.company.subdomain %>.<%= $CONFIG[:domain] %>
+<% if @welcome_message && @welcome_message.length > 0 %>
+<%= @welcome_message %>
+<% end -%>
+
+Your login information
+----------------------
+Username: <%= @user.username %>
+Password: <%= @user.password %>
+
+-------------------->
+<%= $CONFIG[:productName] %>

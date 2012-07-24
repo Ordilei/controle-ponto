@@ -1,0 +1,765 @@
+//= require jquery
+//= require jquery_ujs
+//= require jquery.cookie
+//= require jquery-ui
+//= require bootstrap
+//= require jquery.layout
+//= require ui.multiselect
+//= require jqgrid.i18n/grid.locale-en
+//= require jquery.jqGrid.src
+//= require jquery.autogrow
+//= require jquery.form
+//= require jquery.remotipart
+//= require fullcalendar
+//= require json2
+//= require slimbox2
+//= require tasklist
+//= require task
+//= require unified_search
+//= require trigger
+//= require filter
+//= require template
+//= require project_file
+//= require widget
+//= require calendar
+//= require services
+//= require user_edit
+//= require_tree ./tasks
+//
+
+
+jQuery.noConflict();
+
+// -------------------------
+// theming
+//
+
+
+// -------------------------
+// show progress spinner
+//
+
+function showProgress() {
+  jQuery('#loading').show('fast');
+}
+function hideProgress() {
+  jQuery('#loading').hide('fast');
+}
+
+jQuery(document).mousemove(function(e) {
+  if (jQuery('#loading').is(':visible')) {
+    jQuery("#loading").css({
+      top: (e.pageY  - 8) + "px",
+      left: (e.pageX + 10) + "px"
+    });
+  }
+});
+
+jQuery("#loading").bind("ajaxSend", function(){
+   jQuery(this).show('fast');
+ }).bind("ajaxComplete", function(){
+   jQuery(this).hide('fast');
+});
+
+
+
+function do_update(user, url) {
+  if( user != userId ) {
+      jQuery.get(url);
+  }
+}
+
+function addProjectToUser(event, ui) {
+    var value = ui.item.id;
+
+    var url = document.location.toString();
+    url = url.replace("/edit/", "/project/");
+    jQuery.get(url, { project_id: value }, function(data) {
+        jQuery("#add_user").before(data);
+    }, 'html');
+
+    jQuery(this).val("");
+    return false;
+}
+
+function addUserToProject(event, ui) {
+    var value = ui.item.id;
+    var url = document.location.toString();
+    url = url.replace("edit", "ajax_add_permission");
+
+    jQuery.get(url, { user_id : value }, function(data) {
+        jQuery("#user_table").html(data);
+    }, 'html');
+    return false;
+}
+
+
+/*
+  Requests the available attributes for the given resource type
+  and updates the page with the returned values.
+*/
+function updateResourceAttributes(select) {
+    select = jQuery(select);
+    var typeId = select.val();
+    var target = jQuery("#attributes");
+
+    if (typeId == "") {
+        target.html("");
+    }
+    else {
+        var url = "/resources/attributes/?type_id=" + typeId;
+        jQuery.get(url, function(data) {
+            target.html(data);
+        }, 'html');
+    }
+}
+
+/*
+  Removes the resource attribute to the link
+*/
+function removeAttribute(link) {
+    link = jQuery(link);
+    link.parents(".control-group").remove();
+}
+
+/*
+  Adds a new field to allow people to have multiple values
+  for resource attributes.
+*/
+function addAttribute(link) {
+    link = jQuery(link);
+    var origAttribute = link.parents(".control-group");
+
+    var newAttribute = origAttribute.clone();
+    newAttribute.find(".value").val("");
+    newAttribute.find("a.add_attribute").remove();
+    newAttribute.find(".attr_id").remove();
+
+    var removeLink = newAttribute.find("a.remove_attribute");
+    // for some reason this onclick needs to be manually set after cloning
+    removeLink.click(function() { removeAttribute(removeLink); });
+    removeLink.show();
+
+    origAttribute.parents("#attributes").append(newAttribute);
+}
+
+
+// I'm not sure why, but we seem to need to add these for the event
+// to fire - onclick doesn't seem to work.
+jQuery(document).ready(function() {
+    jQuery(".remove_attribute").click(function(evt) {
+        removeAttribute(evt.target);
+    });
+});
+
+/*
+ Shows / hides applicabel attribute fields depending on the value
+ of checkbox
+*/
+function updateAttributeFields(checkbox) {
+    checkbox = jQuery(checkbox);
+    var preset = checkbox.is(":checked");
+
+    var parent = checkbox.parents(".attribute");
+    var maxLength = parent.find(".max_length");
+    var choices = parent.find(".choices");
+    var choiceLink = parent.find(".add_choice_link");
+    var multiple = parent.find(".multiple");
+
+    if (preset) {
+        multiple.hide().find("input").attr("checked", false);
+        maxLength.hide().find("input").val("");
+        choices.show();
+        choiceLink.show();
+    }
+    else {
+        multiple.show();
+        maxLength.show();
+        choices.hide().html("");
+        choiceLink.hide();
+    }
+}
+
+/*
+  Does a get request to the given url. The response is appended
+  to any element matching selector.
+  If a callback function is given, that will be called after the partial
+  has been loaded and added to the page.
+*/
+function appendPartial(url, selector, callback) {
+    jQuery.get(url, { }, function(data) {
+        jQuery(selector).append(data);
+
+        if (callback) { callback.call(); }
+    }, 'html');
+}
+
+jQuery(document).ready(function() {
+  jQuery("#attributes").sortable({
+			  handle: ".handle.custom_attribute",
+			  update: function() { updatePositionFields('#attributes'); }
+  });
+
+  jQuery('.attribute .choices').sortable({
+				   handle: ".handle.custom_attribute_choice",
+				   update: function() {updatePositionFields('.attribute .choices'); }
+  });
+
+  jQuery('#resource_type_attributes').sortable({
+				      handle: ".handle.resource_type_attribute",
+				      update: function(){updatePositionFields('#resource_type_attributes'); }
+  });
+
+  jQuery("#property_values").sortable({
+			      handle: ".handle",
+			      update: reorderPropertyValue
+  });
+});
+
+function reorderPropertyValue(event, ui) {
+    var pvs = [];
+    jQuery.each(
+      jQuery('li.property_value'),
+      function(index, element){
+        pvs.push(jQuery(element).attr("id").replace("property_value_", ""));
+      }
+    );
+    jQuery.post('/properties/order', { property_values: pvs } );
+
+}
+
+function updatePositionFields(listSelector) {
+    var list = jQuery(listSelector);
+    var children = list.children();
+
+    for (var i = 0; i < children.length; i++) {
+        var positionField = jQuery(children[i]).find(".position");
+        positionField.val(i + 1);
+    }
+}
+
+/*
+ Adds fields to setup a new custom attribute choice.
+*/
+function addAttributeChoices(sender) {
+    var choices = jQuery(sender).parent().find('.choices');
+    var callback = function() { updatePositionFields(choices); };
+
+    var attribute = jQuery(sender).parents(".attribute");
+    var attrId = attribute.attr("id").split("_").pop();
+
+    if (attrId == "attribute") {
+        // new attribute, so just ignore
+        attrId = "";
+    }
+    var url = "/custom_attributes/choice/" + attrId;
+    appendPartial(url, choices, callback);
+}
+
+/*
+  Adds the selected dependency to the task currently being edited.
+  The task must be saved for the dependency to be permanently linked.
+*/
+function addDependencyToTask(event, ui) {
+    var id = ui.item.id;
+    jQuery(this).val("");
+    jQuery.get("/tasks/dependency/", { dependency_id : id }, function(data) {
+        jQuery("#task_dependencies .dependencies").append(data);
+    }, 'html');
+    return false;
+}
+/*
+  Adds the selected resource to the task currently being edited.
+  The task must be saved for the resource to be permanently linked.
+*/
+function addResourceToTask(event, ui) {
+    var id = ui.item.id;
+    jQuery(this).val("");
+    jQuery.get("/tasks/resource/", { resource_id : id }, function(data) {
+        jQuery("#task_resources").append(data);
+    }, 'html');
+    return false;
+}
+/*
+  Removes the link from resource to task
+*/
+function removeTaskResource(link) {
+    link = jQuery(link);
+    var parent = link.parent(".resource_no");
+    parent.remove();
+}
+
+/*
+  For the resources edit page.
+  Retrieves the password from the given url, and updated
+  the nearest password div with the returned value.
+*/
+function showPassword(link, url) {
+    link = jQuery(link);
+    link.hide();
+
+    var passwordDiv = link.prev(".password");
+    passwordDiv.load(url);
+}
+
+/*
+  Checkboxes for nested forms cause trouble in params parsing
+  when index => nil. This function fixes the problem by disabling the
+  form element that is not in use.
+*/
+function nestedCheckboxChanged(checkbox) {
+    checkbox = jQuery(checkbox);
+    var checked = checkbox.attr("checked");
+
+    var hiddenField = checkbox.prev();
+    if (hiddenField.attr("name") == checkbox.attr("name")) {
+                hiddenField.attr("disabled", checked);
+    }
+}
+
+/*
+    The function nestedCheckboxChanged will fix any
+    checkboxes that are changed, but this function should be called
+    on page load to fix any already in the page (generally because they
+    failed a validation.
+*/
+function fixNestedCheckboxes() {
+  var checkboxes = jQuery(".nested_checkbox");
+  for (var i = 0; i < checkboxes.length; i++) {
+    nestedCheckboxChanged(checkboxes[i]);
+  }
+}
+
+/*
+ Toggles the visiblity of the element next to sender.
+ Updates the text of sender to "Show" or "Hide" as appropriate.
+ Pass selector as null to just hide the immediately preceding element.
+*/
+function togglePreviousElement(sender, selector) {
+    sender = jQuery(sender);
+    var toggle = sender.prev();
+    if (selector) {
+        toggle = jQuery(selector);
+    }
+
+    if (toggle.is(':visible')) {
+        sender.text("Show");
+    }
+    else {
+        sender.text("Hide");
+    }
+
+    toggle.toggle();
+}
+
+
+/*
+  Toggles the approval status of the given work log
+*/
+function toggleWorkLogApproval(sender, workLogId) {
+    jQuery.post("/work_logs/update_work_log", {
+        id : workLogId,
+        "work_log[status]" : jQuery(sender).val() });
+}
+
+function setPageTarget(event, ui) {
+    var id = ui.item.id;
+    var type = ui.item.type;
+    jQuery("#page_notable_id").val(id);
+    jQuery("#page_notable_type").val(type);
+}
+
+//return path to tasks or task_templates controller
+//based on current page path
+//so we can reuse tasks code, views and javasript in taks_templates
+function tasks_path(action_name) {
+  if (/tasks/.test(document.location.pathname)) {
+    return "/tasks/" + action_name ;
+  }
+  else if ( /task_templates/.test(document.location.pathname)) {
+    return "/task_templates/" + action_name ;
+  }
+  else if (jQuery('#template_clone').val() == '1') {
+    return "/tasks/" + action_name ;
+  }
+  return action_name;
+}
+
+
+/*
+ This function adds in the selected value to the previous autocomplete.
+ The autocomplete text field itself will be updated with the name, and
+ a hidden field directly before the text field will be updated with the object id.
+*/
+function updateAutoCompleteField(event, ui) {
+  jQuery("#resource_customer_id").val(ui.item.id);
+  jQuery('#resource_customer_link').attr("href", "/customers/edit/" + ui.item.id);
+}
+
+jQuery(document).ready(function() {
+  fixNestedCheckboxes();
+
+  jQuery(function() {
+    jQuery('#target').catcomplete({
+          source: '/pages/target_list',
+          select: setPageTarget,
+          delay: 800,
+          minLength: 1
+    });
+  });
+
+  autocomplete('#resource_customer_name', '/customers/auto_complete_for_customer_name', updateAutoCompleteField);
+  autocomplete('#project_customer_name', '/customers/auto_complete_for_customer_name', addCustomerToProject);
+  autocomplete('#user_customer_name', '/customers/auto_complete_for_customer_name', addCustomerToUser);
+
+  jQuery(".datefield").datepicker({ constrainInput: false, dateFormat: userDateFormat});
+});
+
+/*Adds the selected customer to the new project*/
+function addCustomerToProject(event, ui){
+  jQuery('#project_customer_id').val(ui.item.id);
+  jQuery('#project_customer_link').attr("href", "/customers/edit/" + ui.item.id);
+}
+
+function addCustomerToUser(event, ui){
+  jQuery('#user_customer_id').val(ui.item.id);
+  jQuery('#user_customer_link').attr("href", "/customers/edit/" + ui.item.id);
+}
+
+function autocomplete(input_field, path, after_callback) {
+  jQuery(input_field).autocomplete({
+    source: path,
+    select: after_callback,
+    delay: 800,
+    minlength: 3,
+    search: showProgress,
+    open: hideProgress
+  }).bind("ajax:complete", hideProgress);
+}
+
+jQuery.widget("custom.catcomplete", jQuery.ui.autocomplete, {
+  _renderMenu: function( ul, items ) {
+    var self = this,
+      currentCategory = "";
+    jQuery.each( items, function( index, item ) {
+      if ( item.category != currentCategory ) {
+        ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+        currentCategory = item.category;
+      }
+      self._renderItem( ul, item );
+    });
+  }
+});
+
+
+
+
+function autocomplete_multiple_remote(input_field, path){
+    jQuery(function(){
+        function split(val) {
+                 return val.split(/,\s*/);
+        }
+        function extractLast(term) {
+                 return split(term).pop();
+                }
+        jQuery(input_field).autocomplete({
+            source: function(request, response) {
+                                jQuery.getJSON(path, {
+                                        term: extractLast(request.term)
+                                }, response);
+            },
+            search: function() {
+                                var term = extractLast(this.value);
+                                if (term.length < 2) {
+                                        return false;
+                                }
+                        },
+            focus: function() {
+                    return false;
+            },
+            select: function(event, ui) {
+                    var terms = split( this.value );
+                    terms.pop();
+                    terms.push( ui.item.value );
+                    terms.push("");
+                    this.value = terms.join(", ");
+                    return false;
+            }
+
+        });
+
+     });
+
+}
+
+// Update the sheet at the top of the page every 90 seconds
+//
+jQuery(document).ready(function(){
+  if (jQuery('#menu_info a').size()) {
+    setInterval(function() {
+      jQuery.get('/tasks/update_sheet_info', function(data) {
+        jQuery('#menu_info').html(data);
+      }, 'html');
+    },90 * 1000);
+  }
+});
+
+function html_decode(value) {
+  if(value=='&nbsp;' || value=='&#160;' || (value.length==1 && value.charCodeAt(0)==160)) { return "";}
+  return !value ? value : String(value).replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+}
+
+function flash_message(message) {
+  jQuery(".alert").remove();
+  jQuery(html_decode(message)).insertAfter(".navbar");
+}
+
+function authorize_ajax_form_callback(json) {
+  if (json.status == "session timeout") {
+    window.location = "/users/sign_in";
+    return false;
+  }
+}
+
+jQuery(document).ready(function(){
+  jQuery('#page_snippet').change(switchTinyMCE);
+});
+
+function switchTinyMCE(){
+    if (jQuery('#page_snippet:checked').size() == 1){
+      if (!(typeof(tinyMCE)=='undefined')){
+        tinyMCE.execCommand('mceRemoveControl', false, 'page_body');
+      }
+    }
+    else{
+      if(typeof(tinyMCE)=='undefined'){
+        initTinyMCE();
+      } else{
+        tinyMCE.execCommand('mceAddControl', false, 'page_body');
+      }
+    }
+}
+
+function collapsiblePanel(panel) {
+  if (getLocalStorage('sidepanel_' + panel) == 'h') {
+    jQuery('div#' + panel +' .panel_content').hide();
+    jQuery('div#' + panel +' .collapsable-sidepanel-button').addClass('panel-collapsed');
+  } else {
+    jQuery('div#' + panel +' .collapsable-sidepanel-button').addClass('panel-open');
+  }
+}
+
+jQuery(function(){
+  for (i=0; i<jQuery(".collapsable-sidepanel-button").length; i++){
+    var panel= jQuery(".collapsable-sidepanel-button").parent().eq(i).attr('id');
+    collapsiblePanel(panel);
+  };
+});
+
+//functions to get, set and remove localStorage
+//don't throw an error if browser doesn't support localStorage
+
+function setLocalStorage(key, val) {
+  if (localStorage != null) {
+    localStorage.setItem(key,val);
+  }
+}
+
+function removeLocalStorage(key) {
+  if (localStorage != null) {
+    localStorage.removeItem(key);
+  }
+}
+
+function getLocalStorage(key) {
+  if (localStorage != null) {
+    return localStorage.getItem(key);
+  } else {
+    return null;
+  }
+}
+
+function isLocalStorageExist(key) {
+  if (localStorage != null) {
+    return localStorage.key(key);
+  } else {
+    return false;
+  }
+}
+jQuery(document).ready(function(){
+  jQuery('.edit a.utility').click(function(){
+    var href= jQuery(this).attr('href')
+    var post_id= href.match(/posts\/(\d+)\/edit/)[1]
+    if (!EditForm.isEditing(post_id)){
+      EditForm.init(post_id);
+        jQuery.ajax({url: href,
+                     type: 'GET',
+                     success: function(data){
+                        jQuery("#edit").replaceWith(data);
+                        EditForm.setReplyId(post_id);
+                        jQuery("#edit-post-" + post_id + "_spinner").hide();
+                        jQuery("#edit_post_body").focus().delay(250);
+                      }
+        });
+    }
+    return false;
+  });
+});
+
+/****
+* Code for the score rule widget
+****/
+function showLoadingAnimationFor(srContainer) {
+  animation = '<%= image_tag("spinner.gif") %>'
+  srContainer.append(animation);
+}
+
+function wireFormFor(srContainer) {
+
+  var forms = srContainer.find(".score_rule_form");
+
+  jQuery.each(forms, function(index, form) {
+    jQuery(form).ajaxForm({
+      beforeSubmit: function() {
+        srContainer.empty();
+        showLoadingAnimationFor(srContainer);
+      },
+      success: function(responseText, statusText, xhr, $form) {
+        srContainer.empty();
+        srContainer.append(responseText);
+        //In case we got a validation error with the form
+        wireFormFor(srContainer);
+      } 
+    });
+  });
+}
+
+function wireActionLinksFor(srContainer) {
+  var actionButtons = [];
+  actionButtons.push({ element: srContainer.find(".new-score-rule"), action: 'GET' });
+  actionButtons.push({ element: srContainer.find(".edit-score-rule"), action: 'GET' });
+  actionButtons.push({ element: srContainer.find(".delete-score-rule"), action: 'DELETE' });
+
+  jQuery.each(actionButtons, function(index, actionButton) {
+    actionButton.element.live('click', function() {
+      srContainer.empty();
+      showLoadingAnimationFor(srContainer);
+
+      var uri = jQuery(this).attr('href');
+
+      jQuery.ajax({
+        url: uri,
+        type: actionButton.action,
+        success: function(data) {
+          srContainer.empty();
+          srContainer.append(data);
+          wireFormFor(srContainer);
+        }
+      });
+
+      return false;
+    });
+  });
+}
+
+function getUriForScoreRules(scoreRulesContainer) {
+
+  var match = scoreRulesContainer.attr('class').match(/for-(\w+)-(\d+)/);
+
+  if(match != null) { 
+    var containerName = match[1];
+    var containerId   = match[2];
+    return "/" + containerName + "/" + containerId + "/" + "score_rules";
+  }
+
+  return false; 
+}
+
+function getSrContainers() {
+  var containers = [];
+
+  jQuery(".score-rules-container").each(function() {
+    var srContainer = jQuery(this); 
+    var uri         = getUriForScoreRules(srContainer);
+
+    if(uri) {
+      containers.push({ uri: uri, element: srContainer });
+    }
+
+  });
+
+  return containers;
+}
+
+function populateSrContainers(srContainers) {
+  jQuery.each(srContainers, function(index, srContainer) {
+    showLoadingAnimationFor(srContainer.element);
+
+    jQuery.ajax({
+      url: srContainer.uri,
+      type: 'GET',
+      success: function(data){
+        srContainer.element.empty();
+        srContainer.element.append(data);
+        wireActionLinksFor(srContainer.element);
+       }
+    });
+  });
+}
+
+
+jQuery(document).ready(function() {
+  //sr --> Score Rule
+  var srContainers = getSrContainers();
+  populateSrContainers(srContainers);
+});
+
+/**
+*
+* Code for input the working hours
+*
+**/
+function getWorkingHours() {
+  var workingHours = "";
+
+  jQuery("#weekly-working-hours li input").each(function(index, element) {
+    workingHours += (jQuery(element).attr('value') + '|')
+  });
+  
+  //Strip last '|'
+  return workingHours.substring(0, workingHours.length - 1); 
+}
+
+jQuery(document).ready(function() {
+  var userForm = jQuery("#weekly-working-hours").parent();
+
+  userForm.bind('submit', function() {
+    jQuery('#user_working_hours').attr('value', getWorkingHours());   
+    return true;
+  });
+});
+
+jQuery(document).ready(function(){
+  jQuery("#add_value_link").click(function(){
+    jQuery('#property_values').append(jQuery(this).data('property'));
+    return false;
+  });
+
+  jQuery('#link_to_remove_patent').click(function(){
+    jQuery('#link_to_remove_patent').parent().remove();
+    return false;
+  });
+
+  autocomplete('#email_attach_user_name', '/users/auto_complete_for_user_name', function(event, ui) {
+    var userId = ui.item.id;
+    var userName = ui.item.name;
+    jQuery('#email_attach_user_name').val(userName);
+    jQuery('#email_attach_user_id').val(userId);
+  })
+
+});
+
+jQuery(document).ready(function () {
+  jQuery("[rel=tooltip]").tooltip();
+});
+

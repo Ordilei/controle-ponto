@@ -1,0 +1,19 @@
+<% @page_title = "Task Templates - #{$CONFIG[:productName]}" %>
+
+<legend>
+  <%=_ 'Task Templates' %>
+  <%= link_to _('New Template'), {:action => 'new'}, :class => "btn pull-right" %>
+</legend>
+
+<ul>
+  <% current_templates.each do |template| %>	
+    <li>
+      <%= link_to template, :controller=>'task_templates', :action=>'edit',:id=>template.task_num %>	   
+      <div style="display:inline;" class="task-action">
+        <%= link_to('<i class="icon-remove"></i>'.html_safe, { :controller => 'task_templates', :action => 'destroy', :id => template},
+            :confirm => _("Are you sure?"), :title => _("Delete %s",template.name ), :rel => "tooltip") %>
+      </div>
+    </li>
+  <% end %>
+</ul>
+

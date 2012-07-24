@@ -1,0 +1,65 @@
+<li class="attribute clearfix" id="<%= dom_id(attribute) %>">
+  <%
+     preset = attribute.custom_attribute_choices.any?
+   -%>
+
+  <%= fields_for(prefix(attribute), attribute) do |f| %>
+    <%= f.hidden_field :position, :index => attribute.id, :class => "position" %>
+
+    <div class="control-group">
+      <label><%=_ "Name" %></label>
+      <div class="controls">
+        <%= f.text_field :display_name, :index => attribute.id %>
+        <%= sortable_handle_tag(attribute) %>
+        <%= link_to_function(_("Remove Attribute"), "jQuery(this).parents('.attribute').remove()", :class => "remove_attribute") %>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label><%=_ "LDAP Name" %></label>
+      <div class="controls">
+        <%= f.text_field :ldap_attribute_type, :index => attribute.id %>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label><%=_ "Mandatory" %></label>
+      <div class="controls">
+        <%= nested_boolean_choice_field(f, :mandatory, attribute) %>
+      </div>
+    </div>
+
+    <span class="multiple" style="display: <%= preset ? "none" : "" %>">
+    <div class="control-group">
+      <label><%=_ "Allows multiple" %></label>
+      <div class="controls">
+        <%= nested_boolean_choice_field(f, :multiple, attribute) %>
+      </div>
+    </div>
+    </span>
+
+    <span class="max_length" style="display: <%= preset ? "none" : "" %>">
+    <div class="control-group">
+      <label><%=_ "Maximum field length " %></label>
+      <div class="controls">
+        <%= f.text_field :max_length, :index => attribute.id %>
+      </div>
+    </div>
+    </span>
+
+    <div class="control-group">
+      <label><%=_ "Use only preset choices" %></label>
+      <div class="controls">
+        <%= check_box_tag(:preset, 1, preset, :onchange => "updateAttributeFields(this)") %>
+      </div>
+    </div>
+
+    <ul class="choices" style="display: <%= preset ? "" : "none" %>; clear:both;">
+      <%= render(:partial => "choice", :collection => attribute.custom_attribute_choices,
+      :locals => { :attribute => attribute }) %>
+    </ul>
+    <%= add_choice_link(attribute) %>
+
+  <% end %>
+
+</li>

@@ -1,0 +1,85 @@
+<div id="reports_config" class="well">
+  <%= form_tag({ :action => 'index' }, :method => :get) do %>
+    <%= report_type_select %>
+    <br/>
+    <label for="report[filter_project]"><%=_ 'Report filter' %></label>
+    <% if current_user.projects.any? %>
+      <select name="report[filter_project]"> 
+        <option value="0" class="select_default"><%= _("[Any Project]") %></option>
+        <% projects = current_user.projects.includes(:customer).except(:order).order("customers.name, projects.name") %>
+        <% client_projects = grouped_client_projects_options(projects)%>
+        <% client_projects.each do |c| %>
+          <optgroup class="select_heading" label="<%= c.first %>">
+          <% c.last.each do |p| %>
+            <option value="<%=p.last%>" class="select_item"<%= " selected" if params[:report] && p.last.to_s == params[:report][:filter_project] %>><%= p.first %></option>
+          <% end %>
+          </optgroup>
+        <% end %>
+      </select>
+    <% end %>
+
+    <select name="report[filter_user]">
+      <% users = objects_to_names_and_ids(@users.uniq.sort_by{ |u| u.name }) %>
+      <% users = [[_("[Any User]"), "0"]] + users %>
+      <%= options_for_select users, params[:report].nil? ? nil : params[:report][:filter_user] %>
+    </select>
+
+    <%= worklog_type_select(params[:report].nil? ? nil : params[:report][:worklog_type]) %>
+
+    <%= time_range_select %>
+
+    <% if params[:report] && params[:report][:range] == "7" %>
+    <span id="date_range">
+    <% else %>
+    <span id="date_range" style="display:none;">
+    <% end %>
+      <%= text_field 'report', 'start_date',
+        {
+          :id => 'start_date',
+          :size => 12,
+          :placeholder => "From", 
+          :value => (params[:report] && params[:report][:start_date]) ? params[:report][:start_date] : ""
+        }
+      %>
+      <%= text_field 'report', 'stop_date',
+        {
+          :id => 'stop_date',
+          :size => 12,
+          :placeholder => "To", 
+          :value => (params[:report] && params[:report][:stop_date]) ? params[:report][:stop_date] : ""}
+      %>
+      <br/>
+    </span>
+
+    <% if( params[:report] && (["1", "4"].include? params[:report][:type]) ) %>
+    <div id="pivot_config">
+    <% else %>
+    <div id="pivot_config" style="display:none;">
+    <% end %>
+      <span><%=_ 'Rows' %></span>
+      <%= rows_columns_select("rows", "1") %>
+      <span><%=_ 'Columns' %></span>
+      <%= rows_columns_select("columns", "7") %><br />
+    </div>
+
+    <div id="approved">
+      <label for="report_hide_approved" class="checkbox inline">
+        <%= check_box 'report', "hide_approved",
+          :checked => (params[:report] && params[:report][:hide_approved].to_i == 1) %>
+        <%=_ "Hide approved logs" %>
+      </label>
+      <label for="report_hide_rejected" class="checkbox inline">
+        <%= check_box 'report', "hide_rejected",
+          :checked => (params[:report] && params[:report][:hide_rejected].to_i == 1) %>
+        <%=_ "Hide rejected logs" %>
+      </label>
+    </div>
+
+    <br clear="all" />
+    <div style="padding-top:0.5em;">
+      <button type="submit" class="btn btn-primary">Run Report</button>
+    </div>
+
+  <% end %>
+</div>
+

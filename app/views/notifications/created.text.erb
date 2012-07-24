@@ -1,0 +1,27 @@
+<%= render(:partial => "task_header") %>
+<%= @task.issue_name.html_safe %>
+<%= "-" * @task.issue_name.length %>
+
+  Client:       <%= @task.project.customer.name %>
+  Project:      <%= @task.project.name %>
+<% if !@task.milestone.nil?  -%>
+  Milestone:    <%= @task.milestone.name %>
+<% end -%>
+<%   @task.company.properties.each do |p| %>
+  <%= p.name + ": " + " "*((12-p.name.size)>0 ? 12-p.name.size : 1) + @task.property_value(p).to_s %>
+<% end
+unless @task.due_at.nil?
+  if email_address = EmailAddress.where("email = ? AND user_id is NOT NULL", @recipient).first
+    tz = email_address.user.tz
+  else
+    tz = Time.zone
+  end
+  -%>
+  Due:          <%= tz.utc_to_local(@task.due_at).strftime("%A, %d %B %Y") %>
+<% end 
+assigned_users = @task.task_owners
+-%>
+  Assigned To:  <%= assigned_users.collect{|u| u.user.name}.join(', ') unless assigned_users.empty? %><%= "No one" if assigned_users.empty? %>
+
+<%= "Description:\n" + @task.description.html_safe if @task.description.length > 0 %>
+<%= render(:partial => "task_footer") %>

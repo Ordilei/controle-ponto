@@ -1,0 +1,32 @@
+<% @page_title = "Task Calendar - #{$CONFIG[:productName]}" %>
+
+<% content_for(:task_list) do %>
+  <div style="padding-top:0.3em;padding-right:1em;" id="calendar"></div>
+
+  <script type="text/javascript">  
+    jQuery.get("/tasks/calendar_resources", function(data) {
+      refresh_calendar(data)
+    })    
+  </script>
+<% end -%>
+
+<%= render(:partial => "task_filters/search_filter", :locals => { :redirect_params => { :tag => params[:tag] }}) %>
+<%= render(:partial => "task_filters/panel") %>
+
+<ul class="nav nav-tabs">
+  <li><a href="/tasks"><i class="icon-list"></i> List</a></li>
+  <li class="active"><a href="/tasks/calendar"><i class="icon-calendar"></i> Calendar</a></li>
+</ul>
+
+<div id="groupby" style="display:none">
+  <%= select_tag("chngroup", options_for_changegroup, :onChange => "change_group()") %>
+</div>
+
+<%= yield(:task_list) %>
+
+<div id="task">
+  <%= render_last_task.html_safe if @task %>
+</div>
+
+<%= render :partial => "/tags/panel" %>
+

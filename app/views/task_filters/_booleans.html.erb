@@ -1,0 +1,11 @@
+<%# defaults for when span.search_filter is removed -%> 
+<%= hidden_field_tag "task_filter[unread_only]", false %>
+
+<% if task_filter.unread_only? %>
+  <li>
+    <%= hidden_field_tag "task_filter[unread_only]", true %>
+    My unread tasks only
+    <%= link_to_function('<i class="icon-remove"></i>'.html_safe, "removeSearchFilter(this)", :class => "pull-right") %>
+    &nbsp;
+  </li>
+<% end -%>

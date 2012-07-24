@@ -1,0 +1,126 @@
+div.basic {
+  label {
+    margin-bottom: 0.3em;
+    margin-right: 0.5em;
+    text-align: left;
+    width: 15em;
+  }
+  input {
+    margin-top: 0.2em;
+  }
+
+}
+
+fieldset.basic {
+  label {
+    margin-bottom: 0.3em;
+    margin-right: 0.5em;
+    text-align: right;
+    width: 15em;
+  }
+
+  input {
+    margin-top: 0.2em;
+  }
+
+  b {
+    float: left;
+    clear: right;
+    text-align: left;
+    margin-left: 0.2em;
+    margin-top: 0.5em;
+    margin-right: 0.1em;
+    margin-bottom: 0.2em;
+  }
+
+  .right_link {
+    clear: right;
+    float: left;
+    margin-bottom: 0.2em;
+    margin-right: 0.1em;
+    margin-top: 0.5em;
+    text-align: left;
+  }
+
+  ul.actions li {
+    list-style-type: none;
+    margin: 10px 0px;
+    padding: 0px;
+  }
+  .actions label {
+    clear: none;
+  }
+
+}
+
+.content {
+  background-color: #ffffff;
+}
+
+.invalid {
+  text-decoration: line-through;
+}
+
+a.invalid:hover {
+  text-decoration: line-through underline;
+}
+
+fieldset form br {
+  clear: both;
+}
+
+input.button {
+  border: none;
+}
+
+/* floating fix styles */
+.clearfix:after {
+  content: "\0020";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+  overflow: hidden;
+}
+.clearfix {
+  display: block;
+}
+.clear {
+  clear: both;
+}
+
+.none {
+  display: none !important;
+}
+
+.pagination {
+  margin: 0;
+
+  a.previous_page {
+    border-left-width: 1px;
+  }
+
+  em {
+    color: #999;
+    background-color: whiteSmoke;
+  }
+
+  span {
+    color: #999;
+    background-color: transparent;
+    cursor: default;
+  }
+
+  em, span {
+    float: left;
+    padding: 0 14px;
+    line-height: 34px;
+    text-decoration: none;
+    border: 1px solid #DDD;
+  }
+
+}
+
+.navbar-inner {
+  border-radius: 0;
+}

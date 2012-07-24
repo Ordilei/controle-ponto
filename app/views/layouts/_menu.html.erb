@@ -1,0 +1,17 @@
+<div id="menu_logo">
+  <% if current_user.company.logo? %>
+    <%= image_tag("/companies/show_logo/#{current_user.company.id}", :alt => "logo" ) %>
+  <% else %>
+    <%= image_tag("logo.gif", :alt => "logo" ) %>
+  <% end %>
+</div>
+
+<div id="topper-worktime-area">
+  <% if total_today > 0 %>
+    <small class="pull-right"><%= distance_of_time_in_words(total_today.minutes) %> <%=_ 'worked today'%></small>
+  <% end %>
+
+  <% if @current_sheet && @current_sheet.task %>
+    <%= render :partial => "layouts/sheet_info", :locals => {:task => @current_sheet.task } %>
+  <% end %>
+</div>

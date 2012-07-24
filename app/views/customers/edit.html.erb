@@ -1,0 +1,78 @@
+<% @page_title = "Customer : #{@customer.name} - #{$CONFIG[:productName]}" %>
+
+<%= form_for(@customer, :html => {:class => "form-horizontal"}) do %>
+  <fieldset>
+    <legend>
+      <%= link_to_tasks_filtered_by(_("View Tasks"), @customer, :class => "btn btn-success pull-right") %>
+      <%= @customer.name %>
+    </legend>
+    <%= render :partial => "form" %>
+
+    <div class="form-actions">
+      <%= submit_tag _("Save"), :class => "btn btn-primary" %>
+      <% if current_user.admin?%>
+        <%= link_to _("Delete"), customer_path(@customer), :method => "delete", :confirm => "Really delete #{@customer.name}?", :class => "btn btn-mini btn-danger pull-right" %>
+      <% end %>
+    </div>
+  </fieldset>
+<% end %>
+
+<legend>Score Rules</legend>
+<%= render 'shared/score_rules_container',
+    :container_name => 'customers',
+    :container_id   => params[:id] %>
+
+<legend>
+  <%= _"Users" %>
+  <%= create_users_link(@customer, :class => "btn pull-right") %>
+</legend>
+<% for @user in @customer.users %>
+  <%= render(:partial => "/users/user", :locals => { :show_avatar => false }) %>
+<% end %>
+
+<legend>
+  <%= _"Sites" %>
+  <%= link_to(_("Create Site"), new_organizational_unit_path(:customer_id => @customer.id), :class => "btn pull-right") %>
+</legend>
+
+<ul>
+  <% for @org_unit in @customer.organizational_units.active %>
+    <li><%= link_to(@org_unit, edit_organizational_unit_path(@org_unit)) %></li>
+  <% end %>
+</ul>
+
+<% if current_user.use_resources? -%>
+  <legend>
+    Resources
+    <%= link_to(_("Create Resource"), new_resource_path(:customer_id => @customer.id), :class => "btn pull-right") %>
+  </legend>
+  <ul>
+    <% resources_without_parents(@customer.resources).each do |r| %>
+      <%= render(:partial => "/resources/resource", :locals => { :resource => r, :depth => 0 }) %>
+    <% end %> 
+  </ul>
+<% end -%>
+
+<%= render :partial => "/pages/notes", :locals =>{ :notes=> @customer.notes} %>
+
+<% if @customer.projects.in_progress.size > 0 %>
+  <legend>Current Projects</legend>
+  <%= render :partial => "projects/project", :collection => @customer.projects.in_progress %>
+<% end %>
+
+<% if @customer.projects.completed.size > 0 %>
+  <legend>Completed Projects</legend>
+  <%= render :partial => "projects/project", :collection => @customer.projects.completed %>
+<% end %>
+
+<legend>Service Level Agreements</legend>
+<div class="service-level-agreements-customer-page service-level-agreements">
+  <%= render :partial => "service_level_agreements/service_level_agreement", :collection => @customer.service_level_agreements %>
+</div>
+<input type="text" placeholder="type to add service" id="service-edit-autocomplete-for-service"/>
+
+<script type="text/javascript">
+  jQuery(function() {
+    var serviceEditor = new jobsworth.services.ServiceEditor({customer_id: <%= @customer.id %>});
+  })
+</script>

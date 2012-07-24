@@ -1,0 +1,10 @@
+<% @page_title = "Projects - #{$CONFIG[:productName]}" %>
+
+<legend><%=_ 'Projects' %></legend>
+
+<%= render :partial => "project", :collection => @projects %>
+
+<% if current_user.completed_projects.size > 0 %>
+  <%= link_to _('%d completed project', current_user.completed_projects.size), :controller => 'projects', :action => 'list_completed' %>
+<% end %>
+

@@ -1,0 +1,49 @@
+<div class="control-group">
+  <label for="project_name"><%=_ 'Name' %></label>
+  <div class="controls">
+    <%= text_field 'project', 'name', {:autocomplete=>"off"}  %>
+  </div>
+</div>
+
+<div class="control-group">
+  <label for="project_customer_name"><%=_ 'Company' %></label>
+  <div class="controls">
+    <%= text_field :customer, :name, {
+          :id=>"project_customer_name",
+          :value => @project.customer.nil? ? "" :@project.customer.name,
+          :autocomplete => "off",
+          :rel => "tooltip",
+          :title => "Please enter the client name by the autocomplete."
+        }
+    %>
+    <a href="<%= @project.customer.nil? ? "#" : "/customers/edit/#{@project.customer.id}" %>" id="project_customer_link"><i class="icon-share" title="Go to this company"></i></a>
+
+  </div>
+</div>
+
+<div class="control-group">
+  <label for="project_default_estimate"><%= _ 'Default Estimate' %></label>
+  <div class="controls">
+    <%= text_field 'project', 'default_estimate' %>
+  </div>
+</div>
+
+<div class="control-group">
+  <label for="project_suppress_billing"><%= _ 'Suppress Billing' %></label>
+  <div class="controls">
+    <label class="checkbox">
+      <%= check_box 'project', 'suppressBilling' %>
+      Don't bill time for this project
+    </label>
+  </div>
+</div>
+
+<input type = "hidden" id = "project_customer_id" name = "project[customer_id]" value="<%=@project.customer.nil? ? 0 :@project.customer.id -%>">
+
+<div class="control-group">
+  <label for="project_name"><%=_ 'Description' %></label>
+  <div class="controls">
+    <%= text_area 'project', 'description', :rows => 5, :class => "input-xxlarge"  %>
+  </div>
+</div>
+

@@ -1,0 +1,38 @@
+<table class="content" width="100%"
+       id="permission permission_list" style="margin-left:0;margin-right:0;">
+  <tr>
+    <th style="text-align: left;"><%=_ 'Project' %></th>
+    <th><%=_ "Read" %></th>
+    <th><%=_ 'Comment' %></th>
+    <th><%=_ 'Work' %></th>
+    <th><%=_ 'Close' %></th>
+    <th><%=_ 'See unwatched'%> </th>
+    <th><%=_ 'Create' %></th>
+    <th><%=_ 'Edit' %></th>
+    <th><%=_ 'Assign' %></th>
+    <th><%=_ 'Milestones' %></th>
+    <th><%=_ 'Reports' %></th>
+    <th><%=_ 'Grant' %></th>
+    <th><%=_ 'All' %></th>
+    <th></th>
+  </tr>
+
+  <%= render :partial => "users/project", :collection => @user.projects, :locals => { :user_edit => true } %>
+  <% if @user.active %>
+    <tr id="add_user">
+      <td>
+        <%= _("Add project to user ") %>
+      </td>
+      <td colspan="12">
+        <%= text_field :project, :name, {:id => "user_project_name_autocomplete", :value => "" }%>
+      </td>
+    </tr>
+  <% end %>
+</table>
+
+<script type="text/javascript" language="javascript" charset="utf-8">
+  jQuery(function() {
+    autocomplete('#user_project_name_autocomplete', '/users/auto_complete_for_project_name', addProjectToUser);
+  })
+</script>
+

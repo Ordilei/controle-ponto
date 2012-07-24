@@ -1,0 +1,73 @@
+<%= form_for(@resource, :html => {:class => "form-horizontal"}) do |f| %>
+<fieldset>
+
+  <% if @resource.new_record? %>
+    <legend>New Resource</legend>
+  <% else %>
+    <legend>Edit Resource</legend>
+  <% end %>
+
+  <div class="control-group">
+    <label for="resource_name"><%= _("Name") %></label>
+    <div class="controls">
+      <%= f.text_field :name %>
+    </div>
+  </div>
+
+  <div class="control-group">
+  <label for="resource_customer"><%= _("Company") %></label>
+    <div class="controls">
+      <%= f.hidden_field(:customer_id, :class => "auto_complete_id")  %>
+      <%= text_field :resource_customer, :name, { :value => @resource.customer } %>
+      <a href="<%= @resource.customer.nil? ? "#" : "/customers/edit/#{@resource.customer.id}" %>" id="resource_customer_link"><i class="icon-share" title="Go to this company"></i></a>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="resource_parent"><%= _("Parent resource") %></label>
+    <div class="controls">
+      <%= text_field :resource, :parent_id, { :size => 15 } %>
+    </div>
+  </div>
+
+  <script type= "text/javascript">
+    autocomplete('#resource_parent_id',  '/resources/auto_complete_for_resource_parent_id', function(a,b){});
+  </script>
+
+  <div class="control-group">
+    <label for="resource_type"><%= _("Type") %></label>
+    <div class="controls">
+      <%= f.select(:resource_type_id, resource_types_options_array, { :include_blank => true }, :onchange => "updateResourceAttributes(this)") %>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="resource_active"><%= ("Active") %></label>
+    <div class="controls">
+      <%= f.check_box :active%>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="resource_notes"><%= _("Notes") %></label>
+    <div class="controls">
+      <%= f.text_area :notes, :class => "input-xxlarge" %>
+    </div>
+  </div>
+
+  <legend><%= _("Attributes") %></legend>
+  <div id="attributes">
+    <% @resource.all_attributes.each do |ra| %>
+      <%= render(:partial => "attribute", :locals => { :attribute => ra }) %> 
+    <% end %>
+  </div>
+
+  <div class="form-actions">
+    <%= cit_submit_tag(@resource) %>
+    <% if !@resource.new_record? %>
+      <%= link_to(_("Delete"), resource_path(@resource), :method => :delete, :confirm => "Are you sure?", :class => "btn btn-danger") %>
+    <% end %>
+  </div>
+</fieldset>
+
+<% end %>

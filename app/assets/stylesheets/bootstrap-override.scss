@@ -1,0 +1,37 @@
+// overwrite bootstrap styles
+// put all variables which change internal bootstrap variables before the @import
+// https://github.com/thomas-mcdonald/bootstrap-sass/blob/master/vendor/assets/stylesheets/bootstrap/_variables.scss
+
+
+@import "variables";
+
+@import "bootstrap";
+@import "bootstrap-responsive";
+
+// because overriding a mixin doesn't work so we need to do it like this
+// this can be removed when the bug in the SCSS bootstrap gem is fixed
+input, button, select, textarea {
+  font-family: $baseFontFamily !important;
+}
+
+img {
+  // override max-width: 100%;
+  max-width: none;
+}
+
+.form-horizontal .control-group > label {
+  float: left;
+  width: 140px;
+  padding-top: 5px;
+  text-align: right;
+}
+
+.dropdown-menu .header {
+  margin-left: 5px;
+}
+
+// tighter borders in the top menu since there is limited room
+.navbar-inner {
+  padding-left: 0;
+  padding-right: 0;
+}

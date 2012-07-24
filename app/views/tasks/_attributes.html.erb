@@ -1,0 +1,34 @@
+<fieldset id="task_attr">
+  <legend><%=_ "Attributes" %></legend>
+  <label for="task_set_tags"><%=_ 'Tags' %></label>
+  <%= text_field("task", "set_tags", {
+      :size => nil,
+      :value => @task.tagstring,
+      :autocomplete => "off" }.merge( perms['edit'])) %>
+  <br />
+
+
+  <% current_user.company.properties.each do |p|
+       selected = (@task.new_record? or @new_task) ? p.default_value : @task.property_value(p)
+       name = "property_#{ p.id }" -%>
+      <label for="<%= name %>"><%= h(p.name) %></label>
+      <select name="task[properties][<%= p.id %>]" id="<%= name %>">
+        <option></option>
+        <% p.property_values.each do |pv| -%>
+          <option value="<%= pv.id %>" <%= selected == pv ? "selected = 'selected'".html_safe : ""  %>><%= h(pv.value) %></option>
+        <% end -%>
+      </select>
+  <% end -%>
+
+  <div class="control-group">
+    <label for="task_service_id"><%=_ 'Service' %></label>
+    <p style="overflow-x:hidden;">
+      <select name="task[service_id]" id="task_service_id" <%= "disabled=\"disabled\"" unless perms['edit'].empty? %>>
+        <%= options_for_task_services(@task.customers, @task) %>
+      </select>
+      <span id="task_service_tip" class="label label-warning" title="Service Tip" style="cursor:help;">?</span>
+      <span class="label label-success hide" id="billable-label">Billable</span>
+    </p>
+  </div>
+
+</fieldset>
